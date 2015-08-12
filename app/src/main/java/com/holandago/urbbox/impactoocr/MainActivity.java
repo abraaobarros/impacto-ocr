@@ -1,13 +1,53 @@
 package com.holandago.urbbox.impactoocr;
 
+import android.content.Intent;
+import android.content.UriMatcher;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.holandago.urbbox.impactoocr.picture.OnPictureFragmentInteractionListener;
 
-public class MainActivity extends AppCompatActivity {
+
+public class MainActivity extends AppCompatActivity implements OnPictureFragmentInteractionListener{
+
+    public static final String LOG_TAG = ".MainActivity";
+
+    public static final String AUTHORITY = "com.holandago.urbbox.impactoocr.MainActivity";
+
+    public static final Uri CAMERA_CLICK_URI = Uri.parse(
+            "action://"+AUTHORITY+"/camera_click");
+
+    public static final int CAMERA_CLICK = 0;
+
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+
+
+    // Defines a set of uris allowed with this Activity
+    private static final UriMatcher mUriMatcher = buildUriMatcher();
+
+    private static UriMatcher buildUriMatcher() {
+
+        UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+
+        //URI for camera click
+        uriMatcher.addURI(AUTHORITY, CAMERA_CLICK_URI.getLastPathSegment(), CAMERA_CLICK);
+
+        return uriMatcher;
+    }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,5 +76,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+        }
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri){
+        switch (mUriMatcher.match(uri)){
+            case CAMERA_CLICK:
+                Log.d(LOG_TAG, "Reached the Fragment Interaction");
+                dispatchTakePictureIntent();
+                break;
+            default:
+                break;
+        }
     }
 }

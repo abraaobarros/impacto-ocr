@@ -1,4 +1,4 @@
-package com.holandago.urbbox.impactoocr;
+package com.holandago.urbbox.impactoocr.picture;
 
 import android.app.Activity;
 import android.net.Uri;
@@ -7,6 +7,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.holandago.urbbox.impactoocr.R;
 
 
 /**
@@ -74,7 +76,7 @@ public class DecidePictureFragment extends Fragment {
             mListener = (OnPictureFragmentInteractionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement OnPictureFragmentInteractionListener");
         }
     }
 

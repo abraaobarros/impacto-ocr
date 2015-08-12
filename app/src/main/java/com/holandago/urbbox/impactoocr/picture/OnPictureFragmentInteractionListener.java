@@ -1,4 +1,4 @@
-package com.holandago.urbbox.impactoocr;
+package com.holandago.urbbox.impactoocr.picture;
 
 import android.net.Uri;
 
