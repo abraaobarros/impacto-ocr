@@ -7,5 +7,5 @@ import android.net.Uri;
  */
 public interface OnPictureFragmentInteractionListener {
 
-    public void onFragmentInteraction(Uri uri);
+    void onFragmentInteraction(Uri uri);
 }
