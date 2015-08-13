@@ -2,10 +2,8 @@ package com.holandago.urbbox.impactoocr;
 
 import android.content.Intent;
 import android.content.UriMatcher;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -13,9 +11,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.holandago.urbbox.impactoocr.picture.OnPictureFragmentInteractionListener;
+import com.holandago.urbbox.impactoocr.picture.manager.PictureManager;
+import com.holandago.urbbox.impactoocr.picture.manager.PictureManagerDelegate;
 
 
-public class MainActivity extends AppCompatActivity implements OnPictureFragmentInteractionListener{
+public class MainActivity extends AppCompatActivity implements OnPictureFragmentInteractionListener, PictureManagerDelegate{
 
     public static final String LOG_TAG = ".MainActivity";
 
@@ -32,6 +32,8 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     // Defines a set of uris allowed with this Activity
     private static final UriMatcher mUriMatcher = buildUriMatcher();
 
+    private final PictureManager mPictureManager = buildPictureManager();
+
     private static UriMatcher buildUriMatcher() {
 
         UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -42,12 +44,11 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
         return uriMatcher;
     }
 
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }
+    public PictureManager buildPictureManager(){
+        return new PictureManager(this);
     }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +82,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            mPictureManager.onCameraResultOk(data);
         }
     }
 
@@ -91,10 +91,24 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
         switch (mUriMatcher.match(uri)){
             case CAMERA_CLICK:
                 Log.d(LOG_TAG, "Reached the Fragment Interaction");
-                dispatchTakePictureIntent();
+                mPictureManager.launchCameraIntent();
                 break;
             default:
                 break;
         }
     }
+
+    // ### PictureManagerDelegate methods
+
+    public void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+
+    public void launchDecidePictureFragment(String encodedImage){
+
+    }
+
 }
