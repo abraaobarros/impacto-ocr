@@ -1,12 +1,46 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.holandago.urbbox.impactoocr.picture.DecidePictureFragment">
+    tools:context="com.holandago.urbbox.impactoocr.picture.DecidePictureFragment"
+    android:background="@color/dark_grey">
     
-    <ImageView
-        android:layout_width="222dp"
-        android:layout_height="286dp"
-        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/picture"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/discard_picture"
+            android:text="@string/discard"/>
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/send_picture"
+            android:text="@string/send"/>
+
+    </LinearLayout>
+
+
 
 
 </RelativeLayout>

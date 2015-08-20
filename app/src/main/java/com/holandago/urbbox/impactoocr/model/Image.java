@@ -2,14 +2,21 @@ package com.holandago.urbbox.impactoocr.model;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.UnsupportedSchemeException;
 import android.util.Base64;
 
+import com.google.gson.JsonObject;
+
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created by razu on 12/08/15.
  */
 public class Image {
+
+    public static final String IMAGE_KEY = "image";
+    public static final String TREATIMAGE_KEY = "treatImage";
 
     /**
      * Converts a Bitmap to a byteArray
@@ -18,9 +25,8 @@ public class Image {
      */
     public static byte[] convertToByteArray(Bitmap image){
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        image.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
-        byte[] b = baos.toByteArray();
-        return b;
+        image.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        return baos.toByteArray();
     }
 
     /**
@@ -29,7 +35,13 @@ public class Image {
      * @return Base64 representation of Bitmap
      */
     public static String convertToBase64(Bitmap image){
-        return Base64.encodeToString(Image.convertToByteArray(image), Base64.DEFAULT);
+        byte[] base64 = Base64.encode(Image.convertToByteArray(image),Base64.DEFAULT);
+        try {
+            return new String(base64, "UTF-8");
+        }catch (UnsupportedEncodingException e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -39,7 +51,19 @@ public class Image {
      */
     public static Bitmap decodeBase64StringToBitmap(String encodedImage){
         byte[] bytes = Base64.decode(encodedImage,Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(bytes,0, bytes.length);
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+    }
+
+    public static JsonObject buildRecognizeParameters(String encondedImage){
+        JsonObject parameters = new JsonObject();
+        try{
+            parameters.addProperty(IMAGE_KEY,encondedImage);
+            parameters.addProperty(TREATIMAGE_KEY, true);
+        }catch (NullPointerException e){
+            e.printStackTrace();
+            return null;
+        }
+        return parameters;
     }
 
 }

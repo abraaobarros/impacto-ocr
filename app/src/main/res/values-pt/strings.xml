@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Impacto OCR</string>
+    <string name="action_gallery">Galeria</string>
+    <string name="action_settings">Configurações</string>
+    <string name="no_image">Sem Imagem</string>
+    <string name="discard">Discard</string>
+    <string name="send">Send</string>
+
+</resources>
