@@ -7,5 +7,7 @@
     <string name="no_image">Sem Imagem</string>
     <string name="discard">Discard</string>
     <string name="send">Send</string>
+    <string name="capture">Tirar Foto</string>
+    <string name="title_activity_camera">Camera</string>
 
 </resources>

@@ -35,9 +35,9 @@ public class PictureManager implements PictureCommunicatorDelegate {
 
     public void onCameraResultOk(Intent data){
         Bundle extras = data.getExtras();
-        mCurrentImage = (Bitmap) extras.get("data");
+        mCurrentImage = Image.bitmapFromByteArray((byte[]) extras.get("data"));
         if(mCurrentImage!=null) {
-            sendImage(mCurrentImage);
+            sendImage((byte[]) extras.get("data"));
         }
     }
 
@@ -62,6 +62,10 @@ public class PictureManager implements PictureCommunicatorDelegate {
     public void onCameraResultOk(){
         File f = new File(mCurrentPhotoPath);
         sendImage(f);
+    }
+
+    public void sendImage(byte[] byteArray){
+        mPictureCommunicator.sendPicture(Image.convertToBase64(byteArray));
     }
 
     public void sendImage(Bitmap image){

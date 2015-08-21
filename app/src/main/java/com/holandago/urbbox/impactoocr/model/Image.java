@@ -29,6 +29,10 @@ public class Image {
         return baos.toByteArray();
     }
 
+    public static Bitmap bitmapFromByteArray(byte[] data){
+        return BitmapFactory.decodeByteArray(data, 0, data.length);
+    }
+
     /**
      * Converts a Bitmap to Base64 representation
      * @param image
@@ -36,6 +40,21 @@ public class Image {
      */
     public static String convertToBase64(Bitmap image){
         byte[] base64 = Base64.encode(Image.convertToByteArray(image),Base64.DEFAULT);
+        try {
+            return new String(base64, "UTF-8");
+        }catch (UnsupportedEncodingException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Converts a Bitmap to Base64 representation
+     * @param byteArray
+     * @return Base64 representation of Bitmap
+     */
+    public static String convertToBase64(byte[] byteArray){
+        byte[] base64 = Base64.encode(byteArray,Base64.DEFAULT);
         try {
             return new String(base64, "UTF-8");
         }catch (UnsupportedEncodingException e){

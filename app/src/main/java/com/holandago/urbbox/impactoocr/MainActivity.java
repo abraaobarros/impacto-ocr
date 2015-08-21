@@ -17,6 +17,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.holandago.urbbox.impactoocr.picture.DecidePictureFragment;
 import com.holandago.urbbox.impactoocr.picture.OnPictureFragmentInteractionListener;
+import com.holandago.urbbox.impactoocr.picture.camera.CameraActivity;
 import com.holandago.urbbox.impactoocr.picture.manager.PictureManager;
 import com.holandago.urbbox.impactoocr.picture.manager.PictureManagerDelegate;
 
@@ -122,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     // ### PictureManagerDelegate methods
 
     public void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Intent takePictureIntent = new Intent(this, CameraActivity.class);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
