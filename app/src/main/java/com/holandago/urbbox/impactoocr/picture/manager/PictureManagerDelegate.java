@@ -1,6 +1,7 @@
 package com.holandago.urbbox.impactoocr.picture.manager;
 
 import android.content.ContentResolver;
+import android.content.Intent;
 
 import com.google.gson.JsonObject;
 
@@ -20,6 +21,8 @@ public interface PictureManagerDelegate {
     void sendingFailedWithError(Exception e);
 
     void dispatchGalleryIntent();
+
+    void performCrop(Intent data);
 
     ContentResolver getContentResolver();
 }

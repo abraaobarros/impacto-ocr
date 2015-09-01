@@ -1,5 +1,6 @@
 package com.holandago.urbbox.impactoocr;
 
+import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.UriMatcher;
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     private static final int SELECT_PICTURE = 3;
     static final int REQUEST_TAKE_PHOTO = 2;
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    //keep track of cropping intent
+    final int PIC_CROP = 4;
 
     // Defines a set of uris allowed with this Activity
     private static final UriMatcher mUriMatcher = buildUriMatcher();
@@ -99,11 +102,14 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
             mPictureManager.onCameraResultOk(data);
         }
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-            mPictureManager.onCameraResultOk();
+            mPictureManager.onCameraResultOk(data);
         }
         if (requestCode == SELECT_PICTURE && resultCode == RESULT_OK
                 && null != data){
             mPictureManager.onGalleryResultOk(data);
+        }
+        if (requestCode == PIC_CROP && resultCode == RESULT_OK){
+            mPictureManager.onCropResultOk(data);
         }
     }
 
@@ -123,9 +129,9 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     // ### PictureManagerDelegate methods
 
     public void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(this, CameraActivity.class);
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
         }
     }
 
@@ -160,6 +166,34 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     }
 
     @Override
+    public void performCrop(Intent data){
+        try {
+            //call the standard crop action intent (the user device may not support it)
+            Intent cropIntent = new Intent("com.android.camera.action.CROP");
+            //indicate image type and Uri
+            cropIntent.setDataAndType(data.getData(), "image/*");
+            //set crop properties
+            cropIntent.putExtra("crop", "true");
+            //indicate aspect of desired crop
+            cropIntent.putExtra("aspectX", 0);
+            cropIntent.putExtra("aspectY", 0);
+            //indicate output X and Y
+            cropIntent.putExtra("outputX", 500);
+            cropIntent.putExtra("outputY", 705);
+            //retrieve data on return
+            cropIntent.putExtra("return-data", true);
+            //start the activity - we handle returning in onActivityResult
+            startActivityForResult(cropIntent, PIC_CROP);
+        }
+        catch(ActivityNotFoundException anfe){
+            //display an error message
+            String errorMessage = "Whoops - your device doesn't support the crop action!";
+            Toast toast = Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    }
+
+    @Override
     public void launchDecidePictureFragment(String encodedImage){
         if(mDecidePictureFragment == null){
 
@@ -168,11 +202,13 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
 
     @Override
     public void sentPicture(JsonObject result){
-        JsonArray digits = result.getAsJsonArray("digits");
-        String text = "Texto impresso: ";
-        for(int i = 0; i< digits.size();i++){
-            text = text+" "+digits.get(i).getAsJsonPrimitive().getAsString();
-        }
+//        JsonArray digits = result.getAsJsonArray("digits");
+//        String text = "Texto impresso: ";
+//        for(int i = 0; i< digits.size();i++){
+//            text = text+" "+digits.get(i).getAsJsonPrimitive().getAsString();
+//        }
+        String text = "Jack: "+ result.getAsJsonPrimitive("jack").getAsString();
+        text = text + " Pump: "+ result.getAsJsonPrimitive("pump").getAsString();
         Toast.makeText(this,text,Toast.LENGTH_LONG).show();
     }
 

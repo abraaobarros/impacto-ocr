@@ -1,5 +1,6 @@
 package com.holandago.urbbox.impactoocr.picture.manager;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -9,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.widget.Toast;
 
 import com.google.gson.JsonObject;
 import com.holandago.urbbox.impactoocr.model.Image;
@@ -34,11 +36,21 @@ public class PictureManager implements PictureCommunicatorDelegate {
     }
 
     public void onCameraResultOk(Intent data){
+        performCrop(data);
+    }
+
+    public void onCropResultOk(Intent data){
+        //get the returned data
         Bundle extras = data.getExtras();
-        mCurrentImage = Image.bitmapFromByteArray((byte[]) extras.get("data"));
+        //get the cropped bitmap
+        mCurrentImage = extras.getParcelable("data");
         if(mCurrentImage!=null) {
-            sendImage((byte[]) extras.get("data"));
+            sendImage(Bitmap.createScaledBitmap(mCurrentImage, 1024, 1443, true));
         }
+    }
+
+    private void performCrop(Intent data){
+        mDelegate.performCrop(data);
     }
 
     public void onGalleryResultOk(Intent data){
@@ -65,6 +77,7 @@ public class PictureManager implements PictureCommunicatorDelegate {
     }
 
     public void sendImage(byte[] byteArray){
+
         mPictureCommunicator.sendPicture(Image.convertToBase64(byteArray));
     }
 
