@@ -5,6 +5,8 @@ import android.content.Intent;
 
 import com.google.gson.JsonObject;
 
+import java.io.File;
+
 /**
  * Created by razu on 12/08/15.
  */
@@ -23,6 +25,12 @@ public interface PictureManagerDelegate {
     void dispatchGalleryIntent();
 
     void performCrop(Intent data);
+
+    void performCrop(File f);
+
+    void launchQrCodeIntent();
+
+    void savePictureToGallery(Intent mediaScanIntent);
 
     ContentResolver getContentResolver();
 }

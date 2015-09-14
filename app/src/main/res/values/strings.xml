@@ -8,6 +8,8 @@
     <string name="send">Send</string>
     <string name="capture">Capture</string>
     <string name="title_activity_camera">Camera</string>
+    <string name="app_explanation">Image recognition for data input</string>
+    <string name="copyright">© 2015 Urbbox</string>
 
 
 </resources>

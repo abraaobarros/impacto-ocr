@@ -20,6 +20,7 @@ public class Image {
 
     public static final String IMAGE_KEY = "image";
     public static final String TREATIMAGE_KEY = "treatImage";
+    public static final String PAGE_ID_KEY = "id";
 
     /**
      * Converts a Bitmap to a byteArray
@@ -80,6 +81,19 @@ public class Image {
         JsonObject parameters = new JsonObject();
         try{
             parameters.addProperty(IMAGE_KEY,encondedImage);
+            parameters.addProperty(TREATIMAGE_KEY, true);
+        }catch (NullPointerException e){
+            e.printStackTrace();
+            return null;
+        }
+        return parameters;
+    }
+
+    public static JsonObject buildRecognizeParameters(String encondedImage, String id){
+        JsonObject parameters = new JsonObject();
+        try{
+            parameters.addProperty(IMAGE_KEY,encondedImage);
+            parameters.addProperty(PAGE_ID_KEY, Integer.valueOf(id));
             parameters.addProperty(TREATIMAGE_KEY, true);
         }catch (NullPointerException e){
             e.printStackTrace();

@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.gson.JsonArray;
@@ -40,8 +41,10 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     private static final int SELECT_PICTURE = 3;
     static final int REQUEST_TAKE_PHOTO = 2;
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int REQUEST_QR_CODE = 5;
     //keep track of cropping intent
     final int PIC_CROP = 4;
+    final int PIC_CROP_FILE = 6;
 
     // Defines a set of uris allowed with this Activity
     private static final UriMatcher mUriMatcher = buildUriMatcher();
@@ -99,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            mPictureManager.onCameraResultOk(data);
+            mPictureManager.onCameraResultOk();
         }
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
             mPictureManager.onCameraResultOk(data);
@@ -111,6 +114,14 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
         if (requestCode == PIC_CROP && resultCode == RESULT_OK){
             mPictureManager.onCropResultOk(data);
         }
+        if (requestCode == PIC_CROP_FILE && resultCode == RESULT_OK){
+            mPictureManager.onCropResultOk();
+        }
+        if (requestCode == REQUEST_QR_CODE && resultCode == RESULT_OK){
+            String result = data.getStringExtra("SCAN_RESULT");
+            mPictureManager.setPageId(result);
+            mPictureManager.launchCameraIntentWithFile();
+        }
     }
 
     @Override
@@ -118,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
         switch (mUriMatcher.match(uri)){
             case CAMERA_CLICK:
                 Log.d(LOG_TAG, "Reached the Fragment Interaction");
-                mPictureManager.launchCameraIntent();
+                mPictureManager.launchQrCodeIntent();
                 break;
             default:
                 break;
@@ -128,6 +139,21 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
 
     // ### PictureManagerDelegate methods
 
+    @Override
+    public void launchQrCodeIntent(){
+        try{
+            Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+            intent.putExtra("SCAN_MODE","QR_CODE_MODE");
+            startActivityForResult(intent,REQUEST_QR_CODE);
+        }catch(Exception e){
+            Uri marketUri = Uri.parse("market://details?id=com.google.zxing.client.android");
+            Intent marketIntent = new Intent(Intent.ACTION_VIEW,marketUri);
+            startActivity(marketIntent);
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -135,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
         }
     }
 
+    @Override
     public void dispatchTakePictureIntentWithFile(){
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
@@ -151,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
             if (photoFile != null) {
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
                         Uri.fromFile(photoFile));
-                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
     }
@@ -163,6 +190,47 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
                 android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         // Start the Intent
         startActivityForResult(galleryIntent, SELECT_PICTURE);
+    }
+
+    @Override
+    public void performCrop(File f){
+        try {
+            //call the standard crop action intent (the user device may not support it)
+            Intent cropIntent = new Intent("com.android.camera.action.CROP");
+            //indicate image type and Uri
+            cropIntent.setDataAndType(Uri.fromFile(f), "image/*");
+            //set crop properties
+            cropIntent.putExtra("crop", "true");
+            //indicate aspect of desired crop
+            cropIntent.putExtra("aspectX", 0);
+            cropIntent.putExtra("aspectY", 0);
+//            //indicate output X and Y
+//            cropIntent.putExtra("outputX", 1024);
+//            cropIntent.putExtra("outputY", 1443);
+            //retrieves file so no data should be retrived
+            cropIntent.putExtra("return-data", false);
+
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = mPictureManager.createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                ex.printStackTrace();
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                cropIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        Uri.fromFile(photoFile));
+                startActivityForResult(cropIntent, PIC_CROP_FILE);
+            }
+        }
+        catch(ActivityNotFoundException anfe){
+            //display an error message
+            String errorMessage = "Whoops - your device doesn't support the crop action!";
+            Toast toast = Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT);
+            toast.show();
+        }
     }
 
     @Override
@@ -201,15 +269,31 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     }
 
     @Override
+    public void savePictureToGallery(Intent mediaScanIntent){
+        this.sendBroadcast(mediaScanIntent);
+    }
+
+    @Override
     public void sentPicture(JsonObject result){
-//        JsonArray digits = result.getAsJsonArray("digits");
-//        String text = "Texto impresso: ";
-//        for(int i = 0; i< digits.size();i++){
-//            text = text+" "+digits.get(i).getAsJsonPrimitive().getAsString();
-//        }
-        String text = "Jack: "+ result.getAsJsonPrimitive("jack").getAsString();
-        text = text + " Pump: "+ result.getAsJsonPrimitive("pump").getAsString();
-        Toast.makeText(this,text,Toast.LENGTH_LONG).show();
+        String jack;
+        String pump;
+        try {
+            jack = result.getAsJsonPrimitive("jack").getAsString();
+        }catch (ClassCastException e){
+            jack = "00.00";
+        }
+        try {
+            pump = result.getAsJsonPrimitive("pump").getAsString();
+        }catch (ClassCastException e){
+            pump = "00.00";
+        }
+        try {
+            String text = "Jack: " + jack;
+            text = text + " Pump: " + pump;
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+        }catch (Exception e){
+            sendingFailedWithError(e);
+        }
     }
 
     @Override

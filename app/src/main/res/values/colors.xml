@@ -2,5 +2,6 @@
 <resources>
 
     <item name ="dark_grey" type="color">#4C4C4C</item>
+    <item name="impacto_blue" type="color">#253b6e</item>
 
 </resources>

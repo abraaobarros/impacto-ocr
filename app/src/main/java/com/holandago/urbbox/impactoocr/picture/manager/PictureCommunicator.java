@@ -18,7 +18,7 @@ import java.io.File;
 public class PictureCommunicator {
 
     public static final String BASE_URL = "http://impacto-ocr.herokuapp.com";
-    public static final String RECOGNIZE_URL = BASE_URL+"/recognize";
+    public static final String RECOGNIZE_URL = BASE_URL+"/api/recognize";
     Context mContext;
     PictureCommunicatorDelegate mDelegate;
     ProgressDialog mProgressDialog;
@@ -28,8 +28,8 @@ public class PictureCommunicator {
         mContext = context;
     }
 
-    public void sendPicture(String encodedImage){
-        JsonObject parameters = Image.buildRecognizeParameters(encodedImage);
+    public void sendPicture(String encodedImage, String id){
+        JsonObject parameters = Image.buildRecognizeParameters(encodedImage,id);
         if(parameters!=null) {
             launchRingDialogWithMessage("Favor aguardar");
             Ion.with(mContext)
@@ -44,7 +44,32 @@ public class PictureCommunicator {
                                 sendingFailedWithError(e);
                                 dismissRingDialog();
                             } else {
-                                sentPicture(result);
+                                 sentPicture(result);
+                                dismissRingDialog();
+                            }
+
+                        }
+                    });
+        }
+    }
+
+    public void sendPictureWithString(String encodedImage, String id){
+        JsonObject parameters = Image.buildRecognizeParameters(encodedImage,id);
+        if(parameters!=null) {
+            launchRingDialogWithMessage("Favor aguardar");
+            Ion.with(mContext)
+                    .load(RECOGNIZE_URL)
+                    .setJsonObjectBody(parameters)
+                    .asString()
+                    .setCallback(new FutureCallback<String>() {
+                        @Override
+                        public void onCompleted(Exception e, String result) {
+                            if (e != null) {
+                                e.printStackTrace();
+                                sendingFailedWithError(e);
+                                dismissRingDialog();
+                            } else {
+//                                sentPicture(result);
                                 dismissRingDialog();
                             }
 

@@ -16,6 +16,7 @@ import com.google.gson.JsonObject;
 import com.holandago.urbbox.impactoocr.model.Image;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -29,15 +30,70 @@ public class PictureManager implements PictureCommunicatorDelegate {
     PictureCommunicator mPictureCommunicator;
     String mCurrentPhotoPath;
     Bitmap mCurrentImage = null;
+    String page_id;
 
     public PictureManager(PictureManagerDelegate delegate, Context context){
         mDelegate = delegate;
         mPictureCommunicator = new PictureCommunicator(this,context);
     }
 
+    public void onCameraResultOk(){
+        performCrop(new File(mCurrentPhotoPath));
+    }
+
     public void onCameraResultOk(Intent data){
         performCrop(data);
     }
+
+    public void performCrop(File f){
+        mDelegate.performCrop(f);
+    }
+
+    public Bitmap setBitmap(int targetW, int targetH){
+
+        // Get the dimensions of the bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Determine how much to scale down the image
+        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        return BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+    }
+
+    public void onCropResultOk(){
+        mCurrentImage = setBitmap(1024,1443);
+        if(mCurrentImage!=null) {
+            Bitmap scaledImage = Bitmap.createScaledBitmap(mCurrentImage, 1024, 1443, true);
+            File imageFile = null;
+            try {
+                imageFile = createImageFile();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+            if(imageFile != null) {
+                saveToFile(imageFile, scaledImage);
+            }
+            sendImage(scaledImage);
+//            addPicToGallery(imageFile);
+        }
+
+    }
+
+//    private void addPicToGallery(File imageFile) {
+//        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+//        Uri contentUri = Uri.fromFile(imageFile);
+//        mediaScanIntent.setData(contentUri);
+//        mDelegate.savePictureToGallery(mediaScanIntent);
+//    }
 
     public void onCropResultOk(Intent data){
         //get the returned data
@@ -45,7 +101,17 @@ public class PictureManager implements PictureCommunicatorDelegate {
         //get the cropped bitmap
         mCurrentImage = extras.getParcelable("data");
         if(mCurrentImage!=null) {
-            sendImage(Bitmap.createScaledBitmap(mCurrentImage, 1024, 1443, true));
+            Bitmap scaledImage = Bitmap.createScaledBitmap(mCurrentImage, 1024, 1443, true);
+            File imageFile = null;
+            try {
+                imageFile = createImageFile();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+            if(imageFile != null) {
+                saveToFile(imageFile, scaledImage);
+            }
+            sendImage(scaledImage);
         }
     }
 
@@ -71,18 +137,13 @@ public class PictureManager implements PictureCommunicatorDelegate {
         sendImage(mCurrentImage);
     }
 
-    public void onCameraResultOk(){
-        File f = new File(mCurrentPhotoPath);
-        sendImage(f);
-    }
-
     public void sendImage(byte[] byteArray){
 
-        mPictureCommunicator.sendPicture(Image.convertToBase64(byteArray));
+        mPictureCommunicator.sendPicture(Image.convertToBase64(byteArray), page_id);
     }
 
     public void sendImage(Bitmap image){
-        mPictureCommunicator.sendPicture(Image.convertToBase64(image));
+        mPictureCommunicator.sendPicture(Image.convertToBase64(image), page_id);
     }
 
     public void sendImage(File f){
@@ -90,7 +151,7 @@ public class PictureManager implements PictureCommunicatorDelegate {
     }
 
     public void sendImage(String encodedImage){
-        mPictureCommunicator.sendPicture(encodedImage);
+        mPictureCommunicator.sendPicture(encodedImage,page_id);
     }
 
     public void discardImage(){
@@ -114,12 +175,35 @@ public class PictureManager implements PictureCommunicatorDelegate {
         );
 
         // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        mCurrentPhotoPath = image.getAbsolutePath();
         return image;
+    }
+
+    public void saveToFile(File f, Bitmap image){
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(f);
+            image.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
+            // PNG is a lossless format, the compression factor (100) is ignored
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public String getCurrentPhotoPath(){
         return mCurrentPhotoPath;
+    }
+
+    public void setPageId(String id){
+        page_id = id;
     }
 
     // ### PictureCommunicatorDelegate methods
@@ -141,6 +225,10 @@ public class PictureManager implements PictureCommunicatorDelegate {
 
     public void launchCameraIntent(){
         mDelegate.dispatchTakePictureIntent();
+    }
+
+    public void launchQrCodeIntent(){
+        mDelegate.launchQrCodeIntent();
     }
 
     public void launchCameraIntentWithFile(){

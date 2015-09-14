@@ -9,5 +9,7 @@
     <string name="send">Send</string>
     <string name="capture">Tirar Foto</string>
     <string name="title_activity_camera">Camera</string>
+    <string name="app_explanation">Reconhecimento de imagem para input de dados</string>
+    <string name="copyright">© 2015 Urbbox</string>
 
 </resources>
