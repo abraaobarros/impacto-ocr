@@ -83,17 +83,17 @@ public class PictureManager implements PictureCommunicatorDelegate {
                 saveToFile(imageFile, scaledImage);
             }
             sendImage(scaledImage);
-//            addPicToGallery(imageFile);
+            addPicToGallery(imageFile);
         }
 
     }
 
-//    private void addPicToGallery(File imageFile) {
-//        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//        Uri contentUri = Uri.fromFile(imageFile);
-//        mediaScanIntent.setData(contentUri);
-//        mDelegate.savePictureToGallery(mediaScanIntent);
-//    }
+    private void addPicToGallery(File imageFile) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri contentUri = Uri.fromFile(imageFile);
+        mediaScanIntent.setData(contentUri);
+        mDelegate.savePictureToGallery(mediaScanIntent);
+    }
 
     public void onCropResultOk(Intent data){
         //get the returned data

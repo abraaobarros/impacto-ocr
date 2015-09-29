@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -295,6 +296,8 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
             sendingFailedWithError(e);
         }
     }
+
+
 
     @Override
     public void sendingFailedWithError(Exception e){
