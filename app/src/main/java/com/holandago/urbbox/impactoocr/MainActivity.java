@@ -1,5 +1,6 @@
 package com.holandago.urbbox.impactoocr;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -51,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     // Defines a set of uris allowed with this Activity
     private static final UriMatcher mUriMatcher = buildUriMatcher();
 
-    private final PictureManager mPictureManager = buildPictureManager();
+    private PictureManager mPictureManager = buildPictureManager();
 
     private DecidePictureFragment mDecidePictureFragment;
 
@@ -69,7 +70,38 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
         return new PictureManager(this,this);
     }
 
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        unbindManager();
+    }
 
+    @Override
+    protected void onSaveInstanceState(Bundle savedInstanceState) {
+
+        if(mCurrentPhotoPath!=null)
+            savedInstanceState.putString("camera_image", mCurrentPhotoPath);
+
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey("camera_image")) {
+                mCurrentPhotoPath = savedInstanceState.getString("camera_image");
+            }
+        }
+
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
+
+    public void unbindManager(){
+        mPictureManager.mPictureCommunicator = null;
+        mPictureManager = null;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             mPictureManager.onCameraResultOk(mCurrentPhotoPath);
         }
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
@@ -278,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
 
     @Override
     public void sentPicture(JsonObject result){
+        mCurrentPhotoPath = null;
         String jack;
         String pump;
         try {

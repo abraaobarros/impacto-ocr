@@ -43,7 +43,7 @@ public class PictureCommunicator {
                                 sendingFailedWithError(e);
                                 dismissRingDialog();
                             } else {
-                                 sentPicture(result);
+                                sentPicture(result);
                                 dismissRingDialog();
                                 System.gc();
                             }
@@ -84,7 +84,9 @@ public class PictureCommunicator {
     }
 
     public void dismissRingDialog(){
-        mProgressDialog.dismiss();
+        if(mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
     }
 
     public void sendPicture(File image){

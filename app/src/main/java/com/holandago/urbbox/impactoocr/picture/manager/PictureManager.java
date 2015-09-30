@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -27,7 +29,7 @@ import java.util.Date;
 public class PictureManager implements PictureCommunicatorDelegate {
 
     PictureManagerDelegate mDelegate;
-    PictureCommunicator mPictureCommunicator;
+    public PictureCommunicator mPictureCommunicator;
     String mCurrentPhotoPath;
     Bitmap mCurrentImage = null;
     String page_id;
@@ -39,11 +41,13 @@ public class PictureManager implements PictureCommunicatorDelegate {
 
     public void onCameraResultOk(String backupPath){
         if(mCurrentPhotoPath != null) {
+            rotateImageIfNecessary(mCurrentPhotoPath);
             performCrop(new File(mCurrentPhotoPath));
         }else{
             mCurrentPhotoPath = backupPath;
             backupPath = null;
-            performCrop(new File(backupPath));
+            rotateImageIfNecessary(mCurrentPhotoPath);
+            performCrop(new File(mCurrentPhotoPath));
         }
     }
 
@@ -55,28 +59,50 @@ public class PictureManager implements PictureCommunicatorDelegate {
         mDelegate.performCrop(f);
     }
 
-    public Bitmap setBitmap(int targetW, int targetH){
+    public Bitmap setBitmap(){
 
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-
-        // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-
-        // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = 1;
         bmOptions.inPurgeable = true;
+        bmOptions.inSampleSize = 1;
 
         return BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
     }
 
+    public void rotateImageIfNecessary(String imagePath){
+        int rotate = 270;
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inPurgeable = true;
+        bmOptions.inSampleSize = 1;
+        try {
+            ExifInterface exif = new ExifInterface(imagePath);
+            int orientation = exif.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,ExifInterface.ORIENTATION_NORMAL);
+            switch (orientation){
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotate -= 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotate -= 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotate -= 270;
+                    break;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        Matrix matrix = new Matrix();
+        matrix.postRotate(rotate);
+        Bitmap original = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        Bitmap rotatedBitmap = Bitmap.createBitmap(original,0,0,original.getWidth(),original.getHeight(),matrix,true);
+        saveToFile(new File(imagePath),rotatedBitmap);
+    }
+
     public void onCropResultOk(){
-        mCurrentImage = setBitmap(1024,1443);
+        mCurrentImage = setBitmap();
         if(mCurrentImage!=null) {
             Bitmap scaledImage = Bitmap.createScaledBitmap(mCurrentImage, 1024, 1443, true);
             mCurrentImage = null;
@@ -195,8 +221,7 @@ public class PictureManager implements PictureCommunicatorDelegate {
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(f);
-            image.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
-            // PNG is a lossless format, the compression factor (100) is ignored
+            image.compress(Bitmap.CompressFormat.JPEG, 50, out);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
