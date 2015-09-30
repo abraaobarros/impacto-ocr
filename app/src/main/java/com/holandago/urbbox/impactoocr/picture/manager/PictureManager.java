@@ -34,11 +34,17 @@ public class PictureManager implements PictureCommunicatorDelegate {
 
     public PictureManager(PictureManagerDelegate delegate, Context context){
         mDelegate = delegate;
-        mPictureCommunicator = new PictureCommunicator(this,context);
+        mPictureCommunicator = new PictureCommunicator(this);
     }
 
-    public void onCameraResultOk(){
-        performCrop(new File(mCurrentPhotoPath));
+    public void onCameraResultOk(String backupPath){
+        if(mCurrentPhotoPath != null) {
+            performCrop(new File(mCurrentPhotoPath));
+        }else{
+            mCurrentPhotoPath = backupPath;
+            backupPath = null;
+            performCrop(new File(backupPath));
+        }
     }
 
     public void onCameraResultOk(Intent data){
@@ -63,7 +69,7 @@ public class PictureManager implements PictureCommunicatorDelegate {
 
         // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inSampleSize = 1;
         bmOptions.inPurgeable = true;
 
         return BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
@@ -73,6 +79,7 @@ public class PictureManager implements PictureCommunicatorDelegate {
         mCurrentImage = setBitmap(1024,1443);
         if(mCurrentImage!=null) {
             Bitmap scaledImage = Bitmap.createScaledBitmap(mCurrentImage, 1024, 1443, true);
+            mCurrentImage = null;
             File imageFile = null;
             try {
                 imageFile = createImageFile();
@@ -81,9 +88,11 @@ public class PictureManager implements PictureCommunicatorDelegate {
             }
             if(imageFile != null) {
                 saveToFile(imageFile, scaledImage);
+                addPicToGallery(imageFile);
             }
+            imageFile = null;
             sendImage(scaledImage);
-            addPicToGallery(imageFile);
+
         }
 
     }
@@ -144,6 +153,9 @@ public class PictureManager implements PictureCommunicatorDelegate {
 
     public void sendImage(Bitmap image){
         mPictureCommunicator.sendPicture(Image.convertToBase64(image), page_id);
+        mCurrentPhotoPath = null;
+        image = null;
+        System.gc();
     }
 
     public void sendImage(File f){
@@ -237,6 +249,11 @@ public class PictureManager implements PictureCommunicatorDelegate {
 
     public void launchGalleryIntent(){
         mDelegate.dispatchGalleryIntent();
+    }
+
+    @Override
+    public Context getContext(){
+        return mDelegate.getContext();
     }
 
 

@@ -19,20 +19,19 @@ public class PictureCommunicator {
 
     public static final String BASE_URL = "http://impacto-ocr.herokuapp.com";
     public static final String RECOGNIZE_URL = BASE_URL+"/api/recognize";
-    Context mContext;
     PictureCommunicatorDelegate mDelegate;
     ProgressDialog mProgressDialog;
 
-    public PictureCommunicator(PictureCommunicatorDelegate delegate, Context context){
+    public PictureCommunicator(PictureCommunicatorDelegate delegate){
         mDelegate = delegate;
-        mContext = context;
     }
 
     public void sendPicture(String encodedImage, String id){
         JsonObject parameters = Image.buildRecognizeParameters(encodedImage,id);
+        encodedImage = null;
         if(parameters!=null) {
             launchRingDialogWithMessage("Favor aguardar");
-            Ion.with(mContext)
+            Ion.with(mDelegate.getContext())
                     .load(RECOGNIZE_URL)
                     .setJsonObjectBody(parameters)
                     .asJsonObject()
@@ -46,6 +45,7 @@ public class PictureCommunicator {
                             } else {
                                  sentPicture(result);
                                 dismissRingDialog();
+                                System.gc();
                             }
 
                         }
@@ -57,7 +57,7 @@ public class PictureCommunicator {
         JsonObject parameters = Image.buildRecognizeParameters(encodedImage,id);
         if(parameters!=null) {
             launchRingDialogWithMessage("Favor aguardar");
-            Ion.with(mContext)
+            Ion.with(mDelegate.getContext())
                     .load(RECOGNIZE_URL)
                     .setJsonObjectBody(parameters)
                     .asString()
@@ -79,7 +79,7 @@ public class PictureCommunicator {
     }
 
     public void launchRingDialogWithMessage(String message) {
-        mProgressDialog = ProgressDialog.show(mContext, "Enviando imagem", message, true);
+        mProgressDialog = ProgressDialog.show(mDelegate.getContext(), "Enviando imagem", message, true);
         mProgressDialog.setCancelable(true);
     }
 
@@ -89,7 +89,7 @@ public class PictureCommunicator {
 
     public void sendPicture(File image){
         launchRingDialogWithMessage("Favor aguardar");
-        Ion.with(mContext)
+        Ion.with(mDelegate.getContext())
                 .load(RECOGNIZE_URL)
                 .setTimeout(60 * 60 * 1000)
                 .setMultipartFile("image", "image/jpeg", image)

@@ -2,6 +2,7 @@ package com.holandago.urbbox.impactoocr;
 
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
             "action://"+AUTHORITY+"/camera_click");
 
     public static final int CAMERA_CLICK = 0;
-
+    String mCurrentPhotoPath;
     private static final int SELECT_PICTURE = 3;
     static final int REQUEST_TAKE_PHOTO = 2;
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -103,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            mPictureManager.onCameraResultOk();
+            mPictureManager.onCameraResultOk(mCurrentPhotoPath);
         }
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
             mPictureManager.onCameraResultOk(data);
@@ -177,6 +178,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
+                mCurrentPhotoPath = photoFile.getAbsolutePath();
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
                         Uri.fromFile(photoFile));
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
@@ -295,6 +297,12 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
         }catch (Exception e){
             sendingFailedWithError(e);
         }
+        System.gc();
+    }
+
+    @Override
+    public Context getContext(){
+        return this;
     }
 
 

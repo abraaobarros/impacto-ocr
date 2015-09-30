@@ -1,6 +1,7 @@
 package com.holandago.urbbox.impactoocr.picture.manager;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 
 import com.google.gson.JsonObject;
@@ -31,6 +32,8 @@ public interface PictureManagerDelegate {
     void launchQrCodeIntent();
 
     void savePictureToGallery(Intent mediaScanIntent);
+
+    Context getContext();
 
     ContentResolver getContentResolver();
 }

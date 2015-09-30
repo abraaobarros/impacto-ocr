@@ -1,5 +1,7 @@
 package com.holandago.urbbox.impactoocr.picture.manager;
 
+import android.content.Context;
+
 import com.google.gson.JsonObject;
 
 /**
@@ -10,4 +12,6 @@ public interface PictureCommunicatorDelegate {
     void sentPicture(JsonObject result);
 
     void sendingFailedWithError(Exception e);
+
+    Context getContext();
 }
