@@ -71,7 +71,7 @@ public class PictureManager implements PictureCommunicatorDelegate {
     }
 
     public void rotateImageIfNecessary(String imagePath){
-        int rotate = 270;
+        int rotate = 90;
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inPurgeable = true;
@@ -82,13 +82,13 @@ public class PictureManager implements PictureCommunicatorDelegate {
                     ExifInterface.TAG_ORIENTATION,ExifInterface.ORIENTATION_NORMAL);
             switch (orientation){
                 case ExifInterface.ORIENTATION_ROTATE_180:
-                    rotate -= 180;
+                    rotate = 90;
                     break;
                 case ExifInterface.ORIENTATION_ROTATE_270:
-                    rotate -= 90;
+                    rotate = 180;
                     break;
                 case ExifInterface.ORIENTATION_ROTATE_90:
-                    rotate -= 270;
+                    rotate = 90;
                     break;
             }
         }catch (Exception e){
@@ -101,7 +101,13 @@ public class PictureManager implements PictureCommunicatorDelegate {
         saveToFile(new File(imagePath),rotatedBitmap);
     }
 
-    public void onCropResultOk(){
+    public void onCropResultOk(String backupPageId, String backupPhotoPath){
+        if(page_id == null){
+            page_id = backupPageId;
+        }
+        if(mCurrentPhotoPath == null){
+            mCurrentPhotoPath = backupPhotoPath;
+        }
         mCurrentImage = setBitmap();
         if(mCurrentImage!=null) {
             Bitmap scaledImage = Bitmap.createScaledBitmap(mCurrentImage, 1024, 1443, true);

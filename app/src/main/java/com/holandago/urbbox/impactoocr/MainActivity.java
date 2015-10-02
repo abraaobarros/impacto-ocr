@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
 
     public static final int CAMERA_CLICK = 0;
     String mCurrentPhotoPath;
+    String mCurrentPageId;
     private static final int SELECT_PICTURE = 3;
     static final int REQUEST_TAKE_PHOTO = 2;
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -81,7 +82,8 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
 
         if(mCurrentPhotoPath!=null)
             savedInstanceState.putString("camera_image", mCurrentPhotoPath);
-
+        if(mCurrentPageId != null)
+            savedInstanceState.putString("page_id",mCurrentPageId);
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -91,6 +93,9 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey("camera_image")) {
                 mCurrentPhotoPath = savedInstanceState.getString("camera_image");
+            }
+            if(savedInstanceState.containsKey("page_id")){
+                mCurrentPageId = savedInstanceState.getString("page_id");
             }
         }
 
@@ -149,10 +154,11 @@ public class MainActivity extends AppCompatActivity implements OnPictureFragment
             mPictureManager.onCropResultOk(data);
         }
         if (requestCode == PIC_CROP_FILE && resultCode == RESULT_OK){
-            mPictureManager.onCropResultOk();
+            mPictureManager.onCropResultOk(mCurrentPageId,mCurrentPhotoPath);
         }
         if (requestCode == REQUEST_QR_CODE && resultCode == RESULT_OK){
             String result = data.getStringExtra("SCAN_RESULT");
+            mCurrentPageId = result;
             mPictureManager.setPageId(result);
             mPictureManager.launchCameraIntentWithFile();
         }
